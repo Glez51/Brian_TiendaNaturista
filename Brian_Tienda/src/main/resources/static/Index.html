@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tienda Naturista Elba</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <h1>Bienvenido a Tienda Naturista Elba</h1>
+
+    <form id="productForm">
+        <div class="mb-3 mt-3">
+            <label for="productCode" class="form-label">Code:</label>
+            <input type="text" class="form-control" id="productCode" placeholder="Enter code" name="productCode">
+        </div>
+        <div class="mb-3 mt-3">
+            <label for="productName" class="form-label">Name:</label>
+            <input type="text" class="form-control" id="productName" placeholder="Enter name" name="productName">
+        </div>
+        <div class="mb-3 mt-3">
+            <label for="productBrand" class="form-label">Brand:</label>
+            <input type="text" class="form-control" id="productBrand" placeholder="Enter brand" name="productBrand">
+        </div>
+        <div class="mb-3 mt-3">
+            <label for="productPrice" class="form-label">Price:</label>
+            <input type="number" class="form-control" id="productPrice" placeholder="Enter price" name="productPrice">
+        </div>
+        <div class="mb-3 mt-3">
+            <label for="productStock" class="form-label">Stock:</label>
+            <input type="number" class="form-control" id="productStock" placeholder="Enter stock" name="productStock">
+        </div>
+        <button type="button" class="btn btn-primary" onclick="productRegister()">Save</button>
+    </form>
+
+    <table id="productsTable" class="table table-dark table-striped">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Brand</th>
+            <th>Price</th>
+            <th>Stock</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- Table body will be populated dynamically -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    async function populateTableFromJSON(url) {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const allProductsFromDB = await response.json();
+            const tableBody = document.querySelector("#productsTable tbody");
+            tableBody.innerHTML = ""; // Limpiamos el contenido existente de la tabla
+            allProductsFromDB.forEach(product => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${product.id}</td>
+                    <td>${product.code}</td>
+                    <td>${product.name}</td>
+                    <td>${product.brand}</td>
+                    <td>${product.price}</td>
+                    <td>${product.stock}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        } catch (error) {
+            console.error('There was a problem with the fetch operation:', error);
+        }
+    }
+
+    async function productRegister() {
+        try {
+            const formProductName = document.getElementById("productName").value;
+            const formProductCode = document.getElementById("productCode").value;
+            const formProductBrand = document.getElementById("productBrand").value;
+            const formProductPrice = document.getElementById("productPrice").value;
+            const formProductStock = document.getElementById("productStock").value;
+
+            const apiUrl = "http://localhost:8080/products";
+
+            const productObject = {
+                code: formProductCode,
+                name: formProductName,
+                brand: formProductBrand,
+                price: formProductPrice,
+                stock: formProductStock
+            };
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(productObject)
+            });
+
+            if (!response.ok) {
+                throw new Error('Error al guardar el producto');
+            }
+
+            const responseData = await response.json();
+            console.log('Producto guardado:', responseData);
+            cleanScreen();
+            // Actualizamos la tabla después de guardar el producto
+            populateTableFromJSON(apiUrl);
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    function cleanScreen() {
+        document.getElementById("productName").value = "";
+        document.getElementById("productCode").value = "";
+        document.getElementById("productBrand").value = "";
+        document.getElementById("productPrice").value = "";
+        document.getElementById("productStock").value = "";
+    }
+
+    const apiUrl = "http://localhost:8080/products";
+
+    // Al cargar la página, poblar la tabla con los productos
+    document.addEventListener('DOMContentLoaded', () => {
+        populateTableFromJSON(apiUrl);
+    });
+</script>
+</body>
+</html>

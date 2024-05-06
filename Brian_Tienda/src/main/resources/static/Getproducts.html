@@ -1,0 +1,120 @@
+<<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>All products from DB</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+
+<h2>Products Data</h2>
+<form>
+    <div class="mb-3 mt-3">
+        <label for="productCode" class="form-label">Code:</label>
+        <input type="text" class="form-control" id="productCode" placeholder="Search by code" name="productCode">
+    </div>
+    <div class="mb-3 mt-3">
+        <label for="productName" class="form-label">Name:</label>
+        <input type="text" class="form-control" id="productName" placeholder="Enter name" name="productName">
+    </div>
+    <button type="button" class="btn btn-primary" onclick="findProduct('productCode')">Search by Code</button>
+    <button type="button" class="btn btn-primary" onclick="findProduct('productName')">Search by Name</button>
+    <button type="button" class="btn btn-primary" onclick="populateTableFromJSON(url)">Clear filters</button>
+</form>
+
+<table id="productsTable" class="table table-dark table-striped">
+    <thead>
+    <tr>
+        <th>Id</th>
+        <th>Code</th>
+        <th>Name</th>
+        <th>Price</th>
+        <th>Brand</th>
+        <th>Stock</th>
+        <th>Options</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- Table body will be populated dynamically -->
+    </tbody>
+</table>
+
+<script>
+    const url = "http://localhost:8080/products";
+
+    async function populateTableFromJSON(url) {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const allProductsFromDB = await response.json();
+            const tableBody = document.querySelector("#productsTable tbody");
+            tableBody.innerHTML = "";
+            allProductsFromDB.forEach(product => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${product.id}</td>
+                    <td>${product.code}</td>
+                    <td>${product.name}</td>
+                    <td>${product.price}</td>
+                    <td>${product.brand}</td>
+                    <td>${product.stock}</td>
+                    <td>
+                        <button type="button" class="btn btn-danger" id="${product.id}" onclick="deleteProductButton(${product.id})">Delete</button>
+                        <button type="button" class="btn btn-warning" id="${product.id}" onclick="editProduct(${product.id})">Edit</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        } catch (error) {
+            console.error('There was a problem with the fetch operation:', error);
+        }
+    }
+
+    populateTableFromJSON(url);
+
+    function editProduct(id) {
+        console.log("Edit product with ID:", id);
+        // Implement your logic to edit a product here
+    }
+
+    function deleteProductButton(id) {
+        console.log("Delete product with ID:", id);
+        // Implement your logic to delete a product here
+    }
+
+    async function findProduct(searchField) {
+        const searchValue = document.getElementById(searchField).value;
+        const searchPath = searchField === 'productCode' ? '/findProductByCode/' : '/findProductByName/';
+        try {
+            const response = await fetch(url + searchPath + searchValue);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const foundProduct = await response.json();
+            const tableBody = document.querySelector("#productsTable tbody");
+            tableBody.innerHTML = "";
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${foundProduct.id}</td>
+                <td>${foundProduct.code}</td>
+                <td>${foundProduct.name}</td>
+                <td>${foundProduct.price}</td>
+                <td>${foundProduct.brand}</td>
+                <td>${foundProduct.stock}</td>
+                <td>
+                    <button type="button" class="btn btn-danger" id="${foundProduct.id}" onclick="deleteProductButton(${foundProduct.id})">Delete</button>
+                    <button type="button" class="btn btn-warning" id="${foundProduct.id}" onclick="editProduct(${foundProduct.id})">Edit</button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        } catch (error) {
+            console.error('There was a problem with the fetch operation:', error);
+        }
+    }
+</script>
+
+</body>
+</html>
